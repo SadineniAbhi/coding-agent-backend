@@ -33,3 +33,12 @@ class GitHubAPIError(APIError):
 class ProjectError(APIError):
     pass
 
+class KeyAlreadyExistsError(APIError):
+    pass
+
+class KeyNotFoundError(APIError):
+    pass
+
+class InfraNotFoundError(APIError):
+    pass
+

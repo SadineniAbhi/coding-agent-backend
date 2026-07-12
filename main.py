@@ -1,8 +1,10 @@
+import httpx
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from beanie import init_beanie
 from pymongo import AsyncMongoClient
+from redis.asyncio import Redis
 from contextlib import asynccontextmanager
 
 from utils.env import settings
@@ -22,10 +24,15 @@ async def lifespan(app: FastAPI):
     logger.info("Connecting to MongoDB")
     app.state.mongo_client = AsyncMongoClient(settings.MONGO_DB_URI)
     await init_beanie(database=app.state.mongo_client.backend, document_models=[Project])
+    logger.info("Connecting to Redis")
+    app.state.redis_client = Redis.from_url(settings.REDIS_URL)
+    app.state.httpx_client = httpx.AsyncClient()
     logger.info("Startup complete")
     yield
-    logger.info("Shutting down — closing MongoDB connections")
+    logger.info("Shutting down — closing MongoDB, Redis and HTTP connections")
     await app.state.mongo_client.close()
+    await app.state.redis_client.aclose()
+    await app.state.httpx_client.aclose()
     logger.info("Shutdown complete")
 
 

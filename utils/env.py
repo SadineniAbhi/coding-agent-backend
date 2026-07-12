@@ -7,6 +7,10 @@ class Settings(BaseSettings):
     AUTH0_DOMAIN: str
     AUTH0_AUDIENCE: str
     MONGO_DB_URI: str
+    REDIS_URL: str
+    SANDBOX_EXPIRY_TIME_SEC: int
+    SANDBOX_IMAGE: str
+    AGENT_MAX_TURNS: int = 30
 
     model_config = {"env_file": ".env"}
 

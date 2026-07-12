@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: coding-agent
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: coding-agent-sandbox-manager
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: coding-agent-sandbox-manager
+subjects:
+  - kind: ServiceAccount
+    name: coding-agent
+roleRef:
+  kind: Role
+  name: coding-agent-sandbox-manager
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coding-agent
+  labels:
+    app: coding-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coding-agent
+  template:
+    metadata:
+      labels:
+        app: coding-agent
+    spec:
+      serviceAccountName: coding-agent
+      containers:
+        - name: coding-agent
+          image: codingagent:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PATH_PREFIX
+              value: "/coding-agent"
+            - name: OPENAI_API_KEY
+              value: "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"
+            - name: AUTH0_DOMAIN
+              value: "dev-xd0ga8sh216d7yr0.us.auth0.com"
+            - name: AUTH0_AUDIENCE
+              value: "https://fastapibackend"
+            - name: MONGO_DB_URI
+              value: "mongodb://mongodb:27017"
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: SANDBOX_EXPIRY_TIME_SEC
+              value: "600"
+            - name: SANDBOX_IMAGE
+              value: "sandbox"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coding-agent
+spec:
+  type: LoadBalancer
+  selector:
+    app: coding-agent
+  ports:
+    - port: 80
+      targetPort: 8000

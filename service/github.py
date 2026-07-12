@@ -1,10 +1,8 @@
 import httpx
 from utils.logger import get_logger
-from service.bash_service import run_command
 from utils.custom_errors import (
     InvalidGitHubToken, 
     GitHubAPIError, 
-    UnableToCloneRepoError
 )
 
 logger = get_logger(__name__)
@@ -87,12 +85,3 @@ async def s_list_repos(token: str) -> list[dict]:
     return [{"full_name": r["full_name"], "url": r["html_url"]} for r in repos]
 
 
-
-def clone_repo(repo_url: str, pat_token: str):
-    logger.info("Cloning repository")
-    url_with_token = repo_url.replace("https://", f"https://x:{pat_token}@")
-    res = run_command(f"git clone {url_with_token}")
-    if res.returncode != 0:
-        logger.error("Failed to clone repository")
-        raise UnableToCloneRepoError("Unable to clone the repo please check the secret", 500)
-    logger.info("Repository cloned successfully")
