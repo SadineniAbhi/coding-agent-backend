@@ -1,6 +1,5 @@
 import asyncio
 from kubernetes import client, config as k8s_config
-from kubernetes.client.exceptions import ApiException
 from utils.logger import get_logger
 
 
@@ -67,17 +66,9 @@ class KubernetesClient:
         self.logger.info("Service deleted for project '%s'", project_id)
 
     async def create_infra(self, project_id: str, image: str) -> None:
-        try:
-            await asyncio.to_thread(self._create_pod_sync, project_id, image)
-            await asyncio.to_thread(self._create_service_sync, project_id)
-        except ApiException as e:
-            self.logger.error("Failed to create infra for project '%s': %s", project_id, e)
-            raise
+        await asyncio.to_thread(self._create_pod_sync, project_id, image)
+        await asyncio.to_thread(self._create_service_sync, project_id)
 
     async def delete_infra(self, project_id: str) -> None:
-        try:
-            await asyncio.to_thread(self._delete_service_sync, project_id)
-            await asyncio.to_thread(self._delete_pod_sync, project_id)
-        except ApiException as e:
-            self.logger.error("Failed to delete infra for project '%s': %s", project_id, e)
-            raise
+        await asyncio.to_thread(self._delete_service_sync, project_id)
+        await asyncio.to_thread(self._delete_pod_sync, project_id)

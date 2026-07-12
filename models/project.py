@@ -50,4 +50,3 @@ class Project(Document):
             description=description,
         )
         return await project.insert()
-        
