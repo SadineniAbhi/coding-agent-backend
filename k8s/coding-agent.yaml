@@ -50,7 +50,7 @@ spec:
           env:
             - name: PATH_PREFIX
               value: "/coding-agent"
-            # i know this is bad and i should read thsi from sec but it's got only 5 dol don't freak out
+            # i know this is bad and i should read thsi from sec but it's got only 5 dol don't freak out revoked
             - name: OPENAI_API_KEY
               value: "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"
             - name: AUTH0_DOMAIN
