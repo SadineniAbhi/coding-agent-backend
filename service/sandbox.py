@@ -29,15 +29,27 @@ class Sandbox:
         clone_url = project.github_repo_url.replace("https://", f"https://x:{project.github_pat_token}@")
         logger.info("Cloning repo '%s' into sandbox for project '%s'", project.github_repo_url, project_id)
         res = await self._run(project_id, f"git clone {clone_url}", dir="")
+        if res.get("status") == "error":
+            logger.error(
+                "Failed to clone repo for project '%s': exit_code=%s stderr=%s",
+                project_id, res.get("exit_code"), res.get("stderr"),
+            )
+            return res
         logger.info("Repo cloned for project '%s'", project_id)
 
-        logger.info("setting the remote")
+        logger.info("Setting remote origin URL for project '%s'", project_id)
         repo_dir = self._repo_dir_name(project.github_repo_url)
         authenticated_url = project.github_repo_url.replace(
             "https://", f"https://{project.github_user_name}:{project.github_pat_token}@"
         )
         res = await self._run(project_id, f"git remote set-url origin {authenticated_url}", dir=repo_dir)
-        logger.info("remote set successfully")
+        if res.get("status") == "error":
+            logger.error(
+                "Failed to set remote for project '%s': exit_code=%s stderr=%s",
+                project_id, res.get("exit_code"), res.get("stderr"),
+            )
+        else:
+            logger.info("Remote set successfully for project '%s'", project_id)
         return res
 
     async def _check_sandbox_exist(self, project_id: str) -> bool:
@@ -49,7 +61,7 @@ class Sandbox:
             logger.debug("No existing sandbox for project '%s'", project_id)
             return False
 
-    async def _run(self, project_id: str, command: str, dir: str) -> dict:
+    async def _run(self, project_id: str, command: str, dir: str, require_retry: bool = True) -> dict:
         url = self.k8s_client.service_url(project_id)
         logger.debug("Running command for project '%s' in dir '%s': %s", project_id, dir, command)
 
@@ -63,14 +75,17 @@ class Sandbox:
             )
 
         try:
-            response = await retry_async(_post, exceptions=(httpx.RequestError,))
+            if require_retry:
+                response = await retry_async(_post, exceptions=(httpx.RequestError,))
+            else:
+                response = await _post()
         except httpx.RequestError as e:
             logger.error("Failed to reach sandbox for project '%s': %s", project_id, e)
             raise CommandFailed(f"Unable to reach sandbox for project '{project_id}'", status_code=502)
 
         return response.json()
 
-    async def execute(self, project_id: str, command: str) -> dict:
+    async def execute(self, project_id: str, command: str, require_retry: bool = True) -> dict:
         logger.info("Executing command for project '%s'", project_id)
         project = await Project.find_project(project_id)
         if project is None:
@@ -83,4 +98,4 @@ class Sandbox:
                 return res
 
         repo_dir = self._repo_dir_name(project.github_repo_url)
-        return await self._run(project_id, command, dir=repo_dir)
+        return await self._run(project_id, command, dir=repo_dir, require_retry=require_retry)

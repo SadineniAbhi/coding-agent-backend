@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     SANDBOX_EXPIRY_TIME_SEC: int
     SANDBOX_IMAGE: str
     AGENT_MAX_TURNS: int = 30
+    FRONTEND_ORIGIN: str = "http://localhost:5173"
+    LANGFUSE_PUBLIC_KEY: str
+    LANGFUSE_SECRET_KEY: str
+    LANGFUSE_HOST: str
 
     model_config = {"env_file": ".env"}
 

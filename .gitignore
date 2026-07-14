@@ -13,3 +13,4 @@ dist/
 .idea/
 .vscode/
 *.log
+k8s/coding-agent.yaml
