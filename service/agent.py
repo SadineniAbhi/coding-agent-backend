@@ -38,7 +38,7 @@ async def execute_command(ctx: RunContextWrapper[AgentContext], command: str) ->
 agent = Agent[AgentContext](
     name="Assistant",
     instructions=SYSTEM_PROMPT,
-    model="gpt-4o",
+    model="gpt-5.1",
     tools=[execute_command],
 )
 
