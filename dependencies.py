@@ -14,13 +14,6 @@ def get_httpx_client(request: Request) -> httpx.AsyncClient:
     return request.app.state.httpx_client
 
 
-def get_sandbox(
-    k8s_client: KubernetesClient = Depends(get_kubernetes_client),
-    httpx_client: httpx.AsyncClient = Depends(get_httpx_client),
-) -> Sandbox:
-    return Sandbox(k8s_client, httpx_client)
-
-
 def get_mongo_client(request: Request) -> AsyncMongoClient:
     return request.app.state.mongo_client
 
@@ -31,4 +24,13 @@ def get_redis_client(request: Request) -> Redis:
 
 def get_redis_utils(redis_client: Redis = Depends(get_redis_client)) -> RedisUtils:
     return RedisUtils(redis_client)
+
+
+def get_sandbox(
+    k8s_client: KubernetesClient = Depends(get_kubernetes_client),
+    httpx_client: httpx.AsyncClient = Depends(get_httpx_client),
+    mongo_client: AsyncMongoClient = Depends(get_mongo_client),
+    redis_utils: RedisUtils = Depends(get_redis_utils),
+) -> Sandbox:
+    return Sandbox(k8s_client, httpx_client, mongo_client, redis_utils)
 

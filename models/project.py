@@ -12,7 +12,6 @@ class Project(Document):
     user_id: str
     project_id: str
     github_user_name: str
-    github_pat_token: str
     github_repo_url: str
     description: str | None = None
 
@@ -38,7 +37,6 @@ class Project(Document):
         name: str,
         user_id: str,
         project_id: str,
-        github_pat_token: str,
         github_user_name: str,
         github_repo_url: str,
         description: str | None,
@@ -48,7 +46,6 @@ class Project(Document):
             user_id=user_id,
             project_id=project_id,
             github_user_name=github_user_name,
-            github_pat_token=github_pat_token,
             github_repo_url=github_repo_url,
             description=description,
         )

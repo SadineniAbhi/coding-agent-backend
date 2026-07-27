@@ -42,3 +42,6 @@ class KeyNotFoundError(APIError):
 class InfraNotFoundError(APIError):
     pass
 
+class InstallationNotFoundError(APIError):
+    pass
+

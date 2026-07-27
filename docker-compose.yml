@@ -2,6 +2,8 @@ services:
   mongo:
     image: mongo:7
     restart: unless-stopped
+    ports:
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
 
@@ -19,8 +21,11 @@ services:
     env_file:
       - .env
     environment:
-      MONGO_DB_URI: mongodb://mongo:27017
-      REDIS_URL: redis://redis:6379
+      - GITHUB_APP_PRIVATE_KEY_PATH=/run/secrets/github-app-private-key.pem
+    volumes:
+      - /home/abhi/abhicodeagent.2026-07-26.private-key.pem:/run/secrets/github-app-private-key.pem:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mongo
       - redis

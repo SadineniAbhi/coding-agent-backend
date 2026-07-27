@@ -1,11 +1,14 @@
 from urllib.parse import urlparse
 
 import httpx
+from pymongo import AsyncMongoClient
 from clients.kuberentes import KubernetesClient
 from models.project import Project
 from utils.env import settings
 from utils.logger import get_logger
 from utils.retry import retry_async
+from utils.redis_utils import RedisUtils
+from utils.github import get_installation_token
 from utils.custom_errors import CommandFailed, InfraNotFoundError, ProjectError
 
 logger = get_logger(__name__)
@@ -13,9 +16,17 @@ logger = get_logger(__name__)
 
 class Sandbox:
 
-    def __init__(self, k8s_client: KubernetesClient, httpx_client: httpx.AsyncClient) -> None:
+    def __init__(
+        self,
+        k8s_client: KubernetesClient,
+        httpx_client: httpx.AsyncClient,
+        mongo_client: AsyncMongoClient,
+        redis_utils: RedisUtils,
+    ) -> None:
         self.k8s_client = k8s_client
         self.httpx_client = httpx_client
+        self.mongo_client = mongo_client
+        self.redis_utils = redis_utils
 
     @staticmethod
     def _repo_dir_name(repo_url: str) -> str:
@@ -26,7 +37,9 @@ class Sandbox:
         await self.k8s_client.create_infra(project_id, settings.SANDBOX_IMAGE)
         logger.info("Sandbox infra ready for project '%s'", project_id)
 
-        clone_url = project.github_repo_url.replace("https://", f"https://x:{project.github_pat_token}@")
+        token = await get_installation_token(project.user_id, self.mongo_client, self.redis_utils)
+
+        clone_url = project.github_repo_url.replace("https://", f"https://x-access-token:{token}@")
         logger.info("Cloning repo '%s' into sandbox for project '%s'", project.github_repo_url, project_id)
         res = await self._run(project_id, f"git clone {clone_url}", dir="")
         if res.get("status") == "error":
@@ -39,9 +52,7 @@ class Sandbox:
 
         logger.info("Setting remote origin URL for project '%s'", project_id)
         repo_dir = self._repo_dir_name(project.github_repo_url)
-        authenticated_url = project.github_repo_url.replace(
-            "https://", f"https://{project.github_user_name}:{project.github_pat_token}@"
-        )
+        authenticated_url = project.github_repo_url.replace("https://", f"https://x-access-token:{token}@")
         res = await self._run(project_id, f"git remote set-url origin {authenticated_url}", dir=repo_dir)
         if res.get("status") == "error":
             logger.error(

@@ -31,7 +31,6 @@ async def s_create_project(body: CreateProjectRequest, user_id: str) -> dict:
         user_id=user_id,
         project_id=str(uuid.uuid4()),
         github_user_name=body.github_user_name,
-        github_pat_token=body.github_pat_token,
         github_repo_url=body.github_repo_url,
         description=body.description,
     )

@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     LANGFUSE_PUBLIC_KEY: str
     LANGFUSE_SECRET_KEY: str
     LANGFUSE_HOST: str
+    GITHUB_APP_NAME: str = "AbhiCodeAgent"
+    GITHUB_APP_ID: str = "4398013"
+    GITHUB_APP_PRIVATE_KEY_PATH: str = "/home/abhi/abhicodeagent.2026-07-26.private-key.pem"
 
     model_config = {"env_file": ".env"}
 

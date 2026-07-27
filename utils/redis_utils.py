@@ -14,6 +14,10 @@ class RedisUtils:
         self.client = client
 
 
+    async def set(self, key: str, value: str, ttl: int | None = None) -> None:
+        await self.client.set(key, value, ex=ttl)
+
+
     async def set_if_not_exists(self, key: str, value: str, ttl: int | None = None) -> None:
         was_set = await self.client.set(key, value, nx=True, ex=ttl)
         if not was_set:

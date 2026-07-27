@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
     app.state.mongo_client = AsyncMongoClient(settings.MONGO_DB_URI)
     await init_beanie(database=app.state.mongo_client.backend, document_models=[Project])
     logger.info("Connecting to Redis")
-    app.state.redis_client = Redis.from_url(settings.REDIS_URL)
+    app.state.redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
 
     logger.info("creating httpx client")
     app.state.httpx_client = httpx.AsyncClient()
