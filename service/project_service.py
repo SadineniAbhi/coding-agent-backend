@@ -1,6 +1,7 @@
 import uuid
+from pymongo import AsyncMongoClient
 from models.project import Project
-from utils.custom_errors import ProjectError
+from utils.custom_errors import InstallationNotFoundError, ProjectError
 from utils.logger import get_logger
 from payloads.project import CreateProjectRequest
 
@@ -25,12 +26,16 @@ async def s_list_projects(user_id: str) -> dict:
     logger.info("Listed %d projects for user '%s'", len(projects), user_id)
     return {"projects": [p.model_dump() for p in projects]}
 
-async def s_create_project(body: CreateProjectRequest, user_id: str, cliams: dict) -> dict:
+async def s_create_project(body: CreateProjectRequest, user_id: str, mongo_client: AsyncMongoClient) -> dict:
+    user_doc = await mongo_client.backend.user.find_one({"user_id": user_id})
+    if not user_doc or not user_doc.get("github_login"):
+        raise InstallationNotFoundError(f"No GitHub installation found for user '{user_id}'", status_code=404)
+
     project = await Project.create_project(
         name=body.name,
         user_id=user_id,
         project_id=str(uuid.uuid4()),
-        github_user_name=cliams["nickname"],
+        github_user_name=user_doc["github_login"],
         github_repo_url=body.github_repo_url,
         description=body.description,
     )

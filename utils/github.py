@@ -20,6 +20,28 @@ def _generate_app_jwt() -> str:
     return jwt.encode(payload, private_key, algorithm="RS256")
 
 
+async def get_installation_account_login(installation_id: str) -> str:
+    headers = {
+        "Authorization": f"Bearer {_generate_app_jwt()}",
+        "Accept": "application/vnd.github+json",
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            resp = await client.get(
+                f"https://api.github.com/app/installations/{installation_id}",
+                headers=headers,
+            )
+        except httpx.RequestError:
+            raise GitHubAPIError("Failed to reach GitHub API", status_code=502)
+
+    if resp.status_code != 200:
+        logger.error("Unexpected GitHub API status %s: %s", resp.status_code, resp.text)
+        raise GitHubAPIError(f"GitHub API returned unexpected status {resp.status_code}", status_code=502)
+
+    return resp.json()["account"]["login"]
+
+
 async def get_installation_token(
     user_id: str, mongo_client: AsyncMongoClient, redis_utils: RedisUtils
 ) -> str:

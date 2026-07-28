@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from utils.logger import get_logger
 from utils.env import settings
 from utils.auth import validate_token
+from dependencies import get_mongo_client
 from payloads.project import CreateProjectRequest
 from service import project_service
 
@@ -15,5 +16,9 @@ async def list_projects(claims=Depends(validate_token)):
 
 
 @app.post("/project")
-async def create_project(body: CreateProjectRequest, claims=Depends(validate_token)):
-    return await project_service.s_create_project(body, user_id=claims["sub"], cliams=claims)
+async def create_project(
+    body: CreateProjectRequest,
+    claims=Depends(validate_token),
+    mongo_client=Depends(get_mongo_client),
+):
+    return await project_service.s_create_project(body, user_id=claims["sub"], mongo_client=mongo_client)

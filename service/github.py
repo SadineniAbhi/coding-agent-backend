@@ -3,7 +3,7 @@ import uuid
 from pymongo import AsyncMongoClient
 from fastapi.responses import RedirectResponse
 from utils.env import settings
-from utils.github import get_installation_token
+from utils.github import get_installation_token, get_installation_account_login
 from utils.logger import get_logger
 from utils.redis_utils import RedisUtils
 from utils.custom_errors import (
@@ -47,9 +47,11 @@ async def s_setup_github(
 
     await redis_utils.delete_key(state)
 
+    account_login = await get_installation_account_login(installation_id)
+
     await mongo_client.backend.user.update_one(
         {"user_id": user_id},
-        {"$set": {"installation_id": installation_id}},
+        {"$set": {"installation_id": installation_id, "github_login": account_login}},
         upsert=True,
     )
     logger.info(
