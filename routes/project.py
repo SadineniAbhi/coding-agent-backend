@@ -16,4 +16,4 @@ async def list_projects(claims=Depends(validate_token)):
 
 @app.post("/project")
 async def create_project(body: CreateProjectRequest, claims=Depends(validate_token)):
-    return await project_service.s_create_project(body, user_id=claims["sub"])
+    return await project_service.s_create_project(body, user_id=claims["sub"], cliams=claims)

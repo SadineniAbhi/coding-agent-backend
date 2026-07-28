@@ -25,12 +25,12 @@ async def s_list_projects(user_id: str) -> dict:
     logger.info("Listed %d projects for user '%s'", len(projects), user_id)
     return {"projects": [p.model_dump() for p in projects]}
 
-async def s_create_project(body: CreateProjectRequest, user_id: str) -> dict:
+async def s_create_project(body: CreateProjectRequest, user_id: str, cliams: dict) -> dict:
     project = await Project.create_project(
         name=body.name,
         user_id=user_id,
         project_id=str(uuid.uuid4()),
-        github_user_name=body.github_user_name,
+        github_user_name=cliams["nickname"],
         github_repo_url=body.github_repo_url,
         description=body.description,
     )
